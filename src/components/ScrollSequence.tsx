@@ -138,16 +138,28 @@ export default function ScrollSequence() {
                 ctx.fillRect(0, 0, cw, ch);
 
                 // Draw the perfectly zoomed video frame in the center
+                // Draw the perfectly zoomed video frame in the center
                 ctx.drawImage(img, dx, dy, dw, dh);
 
                 // THE MAGIC: If there's still empty screen space at top/bottom,
                 // grab the 1st/last visible row of pixels and stretch it seamlessly
+                // Safely creating an offscreen canvas to prevent Safari iOS crashes
                 if (dy > 0) {
-                    ctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, dy);
+                    const topRow = document.createElement("canvas");
+                    topRow.width = cw;
+                    topRow.height = 1;
+                    const tctx = topRow.getContext("2d")!;
+                    tctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, 1);
+                    ctx.drawImage(topRow, 0, 0, cw, 1, 0, 0, cw, dy);
                 }
                 const bottomEdge = dy + dh;
                 if (bottomEdge < ch) {
-                    ctx.drawImage(canvas, 0, bottomEdge - 1, cw, 1, 0, bottomEdge, cw, ch - bottomEdge);
+                    const bottomRow = document.createElement("canvas");
+                    bottomRow.width = cw;
+                    bottomRow.height = 1;
+                    const bctx = bottomRow.getContext("2d")!;
+                    bctx.drawImage(canvas, 0, bottomEdge - 1, cw, 1, 0, 0, cw, 1);
+                    ctx.drawImage(bottomRow, 0, 0, cw, 1, 0, bottomEdge, cw, ch - bottomEdge);
                 }
             }
         }
