@@ -9,11 +9,10 @@ function pad(n: number) {
 }
 
 function getViewportSize() {
-    // clientWidth/clientHeight are more reliable than innerWidth/innerHeight
-    // across all modes: mobile, desktop mode on mobile, and actual desktop.
-    const cw = document.documentElement.clientWidth || window.innerWidth;
-    const ch = document.documentElement.clientHeight || window.innerHeight;
-    return { cw, ch };
+    return {
+        cw: document.documentElement.clientWidth || window.innerWidth,
+        ch: document.documentElement.clientHeight || window.innerHeight,
+    };
 }
 
 export default function ScrollSequence() {
@@ -21,32 +20,40 @@ export default function ScrollSequence() {
     const imagesRef = useRef<HTMLImageElement[]>([]);
     const currentFrameRef = useRef(0);
     const rafRef = useRef<number>(0);
-    const [ready, setReady] = useState(false);
-
     const cwRef = useRef(0);
     const chRef = useRef(0);
 
-    // Preload all frames eagerly
+    // Two-phase ready: show frame 0 as soon as it's loaded, then unlock full animation
+    const [firstFrameReady, setFirstFrameReady] = useState(false);
+    const [allFramesReady, setAllFramesReady] = useState(false);
+
+    // --- Phase 1: Preload frame 0 immediately, rest in background ---
     useEffect(() => {
-        const imgs: HTMLImageElement[] = [];
+        const imgs: HTMLImageElement[] = new Array(TOTAL_FRAMES);
         let loaded = 0;
-        const total = TOTAL_FRAMES;
-        for (let i = 0; i < total; i++) {
+
+        for (let i = 0; i < TOTAL_FRAMES; i++) {
             const img = new window.Image();
+            // Prioritise first frame — all others can trickle in
+            if (i === 0) img.fetchPriority = "high";
             img.src = `${IMAGE_PREFIX}${pad(i)}.jpg`;
+            imgs[i] = img;
+
             const onDone = () => {
+                if (i === 0) setFirstFrameReady(true);
                 loaded++;
-                if (loaded === total) setReady(true);
+                if (loaded === TOTAL_FRAMES) setAllFramesReady(true);
             };
             img.onload = onDone;
-            img.onerror = onDone; // don't hang if one frame 404s
-            imgs.push(img);
+            img.onerror = onDone;
         }
+
         imagesRef.current = imgs;
     }, []);
 
+    // --- Phase 2: Setup canvas as soon as frame 0 is ready ---
     useEffect(() => {
-        if (!ready) return;
+        if (!firstFrameReady) return;
 
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d", { alpha: false })!;
@@ -60,26 +67,29 @@ export default function ScrollSequence() {
             cwRef.current = cw;
             chRef.current = ch;
 
-            // Physical pixel buffer
             canvas.width = Math.floor(cw * dpr);
             canvas.height = Math.floor(ch * dpr);
-
-            // CSS display size — match clientWidth exactly so no mismatch
             canvas.style.width = cw + "px";
             canvas.style.height = ch + "px";
-            canvas.style.left = "0px";
-            canvas.style.top = "0px";
 
-            // IMPORTANT: Reset transform completely, then apply DPR.
-            // ctx.scale() is cumulative — calling it on every resize multiplies
-            // the scale each time (dpr^n after n resizes), shrinking the image to a box.
+            // Reset transform fully before applying DPR — prevents scale compounding on resize
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
             renderFrame(currentFrameRef.current);
         }
 
         function renderFrame(index: number) {
-            const img = imagesRef.current[index];
+            const imgs = imagesRef.current;
+            // Find best available frame: try requested, fall back to nearest loaded
+            let img = imgs[index];
+            if (!img || !img.complete || img.naturalWidth === 0) {
+                // Scan backwards to find last loaded frame
+                for (let i = index - 1; i >= 0; i--) {
+                    if (imgs[i]?.complete && imgs[i].naturalWidth > 0) {
+                        img = imgs[i];
+                        break;
+                    }
+                }
+            }
             if (!img || !img.complete || img.naturalWidth === 0) return;
 
             const cw = cwRef.current;
@@ -87,7 +97,7 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // Use object-fit:cover math — fills entire canvas, centered, no letterbox
+            // object-fit: cover — fills entire viewport, centered, no letterboxing ever
             const scale = Math.max(cw / iw, ch / ih);
             const dw = iw * scale;
             const dh = ih * scale;
@@ -97,25 +107,29 @@ export default function ScrollSequence() {
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
+        // --- Scroll-driven frame update ---
         let targetFrame = 0;
 
-        function onScroll() {
+        function updateFromScroll() {
             const scrollY = window.scrollY;
-            const docH = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const docH =
+                document.documentElement.scrollHeight -
+                document.documentElement.clientHeight;
             if (docH <= 0) return;
             const progress = Math.min(Math.max(scrollY / docH, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
-
-            if (!rafRef.current) {
-                rafRef.current = requestAnimationFrame(animateFrames);
-            }
         }
 
-        function animateFrames() {
-            const diff = targetFrame - currentFrameRef.current;
-            currentFrameRef.current += diff * 0.15;
+        // Continuous RAF loop — smooth lerp towards target every frame.
+        // This works for BOTH native scroll and Lenis-driven scroll.
+        function continuousLoop() {
+            updateFromScroll();
 
-            if (Math.abs(diff) < 0.05) {
+            const diff = targetFrame - currentFrameRef.current;
+            // Use faster lerp for snappier response (0.25 instead of 0.15)
+            currentFrameRef.current += diff * 0.25;
+
+            if (Math.abs(diff) < 0.01) {
                 currentFrameRef.current = targetFrame;
             }
 
@@ -125,38 +139,41 @@ export default function ScrollSequence() {
             );
             renderFrame(frameToDraw);
 
-            if (Math.abs(diff) >= 0.05) {
-                rafRef.current = requestAnimationFrame(animateFrames);
-            } else {
-                rafRef.current = 0;
-            }
+            rafRef.current = requestAnimationFrame(continuousLoop);
         }
 
-        // Debounce resize so rapid mobile browser chrome changes don't thrash
+        // Debounced resize handler
         let resizeTimer: ReturnType<typeof setTimeout>;
         function onResize() {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(resize, 50);
+            resizeTimer = setTimeout(resize, 60);
         }
 
-        // Initial render
+        function onOrientationChange() {
+            setTimeout(resize, 300);
+        }
+
+        // Boot
         resize();
-        renderFrame(0);
+        rafRef.current = requestAnimationFrame(continuousLoop);
 
         window.addEventListener("resize", onResize, { passive: true });
-        // Also listen to orientationchange for instant re-draw on rotation
-        window.addEventListener("orientationchange", () => {
-            setTimeout(resize, 200); // wait for browser to settle new dimensions
-        });
-        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("orientationchange", onOrientationChange);
 
         return () => {
             window.removeEventListener("resize", onResize);
-            window.removeEventListener("scroll", onScroll);
+            window.removeEventListener("orientationchange", onOrientationChange);
             clearTimeout(resizeTimer);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
-    }, [ready]);
+    }, [firstFrameReady]);
+
+    // Re-render current frame whenever more frames become available (fills in gaps)
+    useEffect(() => {
+        if (allFramesReady) {
+            // Nothing special needed — the RAF loop will pick up new frames automatically
+        }
+    }, [allFramesReady]);
 
     return (
         <>
@@ -171,6 +188,8 @@ export default function ScrollSequence() {
                     willChange: "transform",
                     transform: "translateZ(0)",
                     display: "block",
+                    // Background matches site so the initial flash before frame 0 isn't jarring
+                    background: "#080808",
                 }}
             />
             {/* Vignette */}
