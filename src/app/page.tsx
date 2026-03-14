@@ -17,7 +17,7 @@ const CustomCursor = dynamic(() => import("@/components/CustomCursor"), { ssr: f
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-[#080808]">
+    <main className="relative min-h-[100svh] bg-black">
       {/* Custom cursor */}
       <CustomCursor />
 

@@ -12,7 +12,7 @@ export default function CTASection() {
         <section
             id="cta"
             ref={ref}
-            className="section-panel relative py-40 px-6 overflow-hidden flex flex-col items-center justify-center"
+            className="section-panel relative py-24 md:py-32 px-6 overflow-hidden flex flex-col items-center justify-center"
         >
             {/* Ambient Deep Cinematic Glow Orbs */}
             <motion.div

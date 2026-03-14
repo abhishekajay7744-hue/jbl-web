@@ -10,7 +10,7 @@ const blurSlideUp = {
 
 export default function HeroSection() {
     return (
-        <section className="section-panel relative min-h-screen flex items-center justify-center pt-20 px-6">
+        <section className="section-panel relative py-32 lg:min-h-screen flex items-center justify-center px-6">
             <div className="text-center max-w-5xl mx-auto flex flex-col items-center">
 
                 <motion.div

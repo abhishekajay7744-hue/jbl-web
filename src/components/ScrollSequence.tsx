@@ -111,13 +111,17 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // object-fit: cover — fills entire viewport, centered, no letterboxing ever
-            const scale = Math.max(cw / iw, ch / ih);
+            // object-fit: contain — ensure entire frame is ALWAYS fully visible without cropping.
+            // Because the site background is now #000000, the letterboxing blends seamlessly.
+            const scale = Math.min(cw / iw, ch / ih);
             const dw = iw * scale;
             const dh = ih * scale;
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
 
+            // Clear frame and paint pure black background for letterboxed areas
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, cw, ch);
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
@@ -203,13 +207,13 @@ export default function ScrollSequence() {
                     transform: "translateZ(0)",
                     display: "block",
                     // Background matches site so the initial flash before frame 0 isn't jarring
-                    background: "#080808",
+                    background: "#000000",
                 }}
             />
             {/* Vignette */}
             <div className="vignette" />
             {/* Dark gradient overlays for readability */}
-            <div className="fixed inset-0 z-[2] pointer-events-none bg-gradient-to-b from-[#080808]/60 via-transparent to-[#080808]/80" />
+            <div className="fixed inset-0 z-[2] pointer-events-none bg-gradient-to-b from-black/60 via-transparent to-black/80" />
         </>
     );
 }

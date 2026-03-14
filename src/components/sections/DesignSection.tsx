@@ -16,7 +16,7 @@ export default function DesignSection() {
     const inView = useInView(ref, { once: true, margin: "-10%" });
 
     return (
-        <section id="design" ref={ref} className="section-panel relative py-40 px-6 flex flex-col items-center justify-center">
+        <section id="design" ref={ref} className="section-panel relative py-24 md:py-32 px-6 flex flex-col items-center justify-center">
             <div className="max-w-6xl mx-auto w-full flex flex-col items-center">
                 {/* Header Centered */}
                 <motion.div

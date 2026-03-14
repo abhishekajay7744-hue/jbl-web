@@ -10,7 +10,7 @@ export default function ANCSection() {
     const [ancOn, setAncOn] = useState(false);
 
     return (
-        <section id="anc" ref={ref} className="section-panel relative py-40 px-6 flex flex-col items-center justify-center overflow-hidden">
+        <section id="anc" ref={ref} className="section-panel relative py-24 md:py-32 px-6 flex flex-col items-center justify-center overflow-hidden">
             {/* Ambient noise background (shown when ANC is OFF) */}
             <motion.div
                 animate={{ opacity: ancOn ? 0 : 0.6 }}

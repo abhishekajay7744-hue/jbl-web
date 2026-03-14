@@ -31,7 +31,7 @@ export default function BatterySection() {
     const hours = useCounter(40, inView);
 
     return (
-        <section id="battery" ref={ref} className="section-panel relative py-40 px-6 flex flex-col items-center justify-center">
+        <section id="battery" ref={ref} className="section-panel relative py-24 md:py-32 px-6 flex flex-col items-center justify-center">
             <div className="max-w-6xl mx-auto w-full flex flex-col items-center">
 
                 {/* Header Centered */}
