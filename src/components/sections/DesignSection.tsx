@@ -40,25 +40,25 @@ export default function DesignSection() {
                 </motion.div>
 
                 {/* Vertical Centered Bento Layout */}
-                <div className="flex flex-col gap-6 w-full max-w-3xl">
+                <div className="flex flex-col gap-6 w-full max-w-3xl mt-16 z-10">
                     {details.map((d, i) => (
                         <motion.div
                             key={d.label}
                             initial={{ opacity: 0, y: 40, filter: "blur(10px)", scale: 0.98 }}
                             animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 } : {}}
                             transition={{ delay: 0.1 * i, duration: 1, ease }}
-                            className="glass group flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 p-8 rounded-[2rem] border border-white/5 hover:bg-white/5 hover:border-[#4f8ef7]/30 transition-all duration-500 relative overflow-hidden"
+                            className="glass group flex flex-col sm:flex-row items-start text-left gap-5 sm:gap-6 p-6 sm:p-8 rounded-[2rem] border border-white/5 hover:bg-white/5 hover:border-[#4f8ef7]/30 transition-all duration-500 relative overflow-hidden"
                         >
                             {/* Hover Glow */}
                             <div className="absolute inset-0 bg-gradient-to-r from-[#4f8ef7]/0 via-[#4f8ef7]/5 to-[#4f8ef7]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 group-hover:bg-[#4f8ef7]/10 group-hover:border-[#4f8ef7]/40 transition-colors duration-500 relative z-10 shadow-lg">
-                                <span className="text-[#4f8ef7] text-lg sm:text-xl font-black">{i + 1}</span>
+                            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-[0.8rem] sm:rounded-2xl bg-white/5 flex-shrink-0 flex items-center justify-center border border-white/10 group-hover:bg-[#4f8ef7]/10 group-hover:border-[#4f8ef7]/40 transition-colors duration-500 relative z-10 shadow-lg">
+                                <span className="text-[#4f8ef7] text-base sm:text-xl font-black">{i + 1}</span>
                             </div>
 
-                            <div className="relative z-10 flex flex-col items-center sm:items-start text-center sm:text-left w-full">
-                                <h3 className="text-white font-bold text-lg sm:text-xl mb-2 sm:mb-3 tracking-wide">{d.label}</h3>
-                                <p className="text-[#777] text-sm md:text-base leading-relaxed font-light">{d.desc}</p>
+                            <div className="relative z-10 flex flex-col items-start text-left w-full mt-1 sm:mt-0">
+                                <h3 className="text-white font-bold text-base sm:text-xl mb-1 sm:mb-2 tracking-wide">{d.label}</h3>
+                                <p className="text-[#888] text-xs sm:text-sm md:text-base leading-relaxed font-light">{d.desc}</p>
                             </div>
                         </motion.div>
                     ))}

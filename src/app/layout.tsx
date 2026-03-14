@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import SmoothScrolling from "@/components/SmoothScrolling";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "JBL Pro Wireless – Experience Sound Without Limits",
@@ -11,6 +15,9 @@ export const metadata: Metadata = {
     description: "Immersive, cinematic audio. JBL's most advanced wireless headphones.",
     type: "website",
   },
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
@@ -20,16 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="antialiased bg-[#080808] text-[#e8e8e8] overflow-x-hidden">
-        {children}
+      <body className={`${inter.className} antialiased bg-[#080808] text-[#e8e8e8] overflow-x-hidden`}>
+        <SmoothScrolling>
+            {children}
+        </SmoothScrolling>
       </body>
     </html>
   );

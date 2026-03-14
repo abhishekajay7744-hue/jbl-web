@@ -1,20 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
 export default function CustomCursor() {
-    const [pos, setPos] = useState({ x: -100, y: -100 });
-    const [ringPos, setRingPos] = useState({ x: -100, y: -100 });
+    const [isHovered, setIsHovered] = useState(false);
     const [clicked, setClicked] = useState(false);
 
-    useEffect(() => {
-        let animId: number;
-        let ring = { x: -100, y: -100 };
-        let target = { x: -100, y: -100 };
+    // Initial position off-screen
+    const mouseX = useMotionValue(-100);
+    const mouseY = useMotionValue(-100);
 
+    // Smooth spring physics for the trailing ring
+    const springConfig = { damping: 25, stiffness: 400, mass: 0.5 };
+    const springX = useSpring(mouseX, springConfig);
+    const springY = useSpring(mouseY, springConfig);
+
+    useEffect(() => {
         const onMove = (e: MouseEvent) => {
-            target = { x: e.clientX, y: e.clientY };
-            setPos({ x: e.clientX, y: e.clientY });
+            mouseX.set(e.clientX);
+            mouseY.set(e.clientY);
+
+            // Check if hovering over clickable elements
+            const target = e.target as HTMLElement;
+            const isClickable = 
+                target.tagName.toLowerCase() === 'a' ||
+                target.tagName.toLowerCase() === 'button' ||
+                target.closest('a') != null ||
+                target.closest('button') != null ||
+                target.classList.contains('clickable');
+
+            setIsHovered(isClickable);
         };
+        
         const onDown = () => setClicked(true);
         const onUp = () => setClicked(false);
 
@@ -22,40 +39,40 @@ export default function CustomCursor() {
         window.addEventListener("mousedown", onDown);
         window.addEventListener("mouseup", onUp);
 
-        function animate() {
-            ring.x += (target.x - ring.x) * 0.12;
-            ring.y += (target.y - ring.y) * 0.12;
-            setRingPos({ x: ring.x, y: ring.y });
-            animId = requestAnimationFrame(animate);
-        }
-        animId = requestAnimationFrame(animate);
-
         return () => {
             window.removeEventListener("mousemove", onMove);
             window.removeEventListener("mousedown", onDown);
             window.removeEventListener("mouseup", onUp);
-            cancelAnimationFrame(animId);
         };
-    }, []);
+    }, [mouseX, mouseY]);
 
     return (
         <>
-            <div
+            <motion.div
                 className="cursor-dot"
                 style={{
-                    left: pos.x - 4,
-                    top: pos.y - 4,
-                    transform: clicked ? "scale(2)" : "scale(1)",
+                    x: mouseX,
+                    y: mouseY,
                 }}
+                animate={{
+                    scale: clicked ? 0.5 : isHovered ? 0 : 1,
+                    opacity: isHovered ? 0 : 1,
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 28 }}
             />
-            <div
+            <motion.div
                 className="cursor-ring"
                 style={{
-                    left: ringPos.x - 18,
-                    top: ringPos.y - 18,
-                    transform: clicked ? "scale(0.6)" : "scale(1)",
-                    opacity: clicked ? 0.4 : 1,
+                    x: springX,
+                    y: springY,
                 }}
+                animate={{
+                    scale: clicked ? 0.8 : isHovered ? 1.6 : 1,
+                    backgroundColor: isHovered ? "rgba(79, 142, 247, 0.15)" : "transparent",
+                    borderColor: isHovered ? "rgba(79, 142, 247, 0.8)" : "rgba(79, 142, 247, 0.5)",
+                    backdropFilter: isHovered ? "blur(4px)" : "blur(0px)",
+                }}
+                transition={{ type: "spring", mass: 0.3, stiffness: 400, damping: 25 }}
             />
         </>
     );

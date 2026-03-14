@@ -55,17 +55,17 @@ export default function SpecsSection() {
                     {/* Ambient glow inside specs */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#4f8ef7]/[0.02] blur-[80px] pointer-events-none" />
 
-                    <div className="grid md:grid-cols-2 gap-x-16 gap-y-6 relative z-10 w-full">
+                    <div className="grid md:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-6 relative z-10 w-full">
                         {specs.map((spec, i) => (
                             <motion.div
                                 key={spec.label}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={inView ? { opacity: 1, x: 0 } : {}}
                                 transition={{ delay: 0.05 * i + 0.5, duration: 0.8, ease }}
-                                className="flex flex-col sm:flex-row justify-between items-center sm:items-end border-b border-white/[0.06] pb-4 group"
+                                className="flex flex-row justify-between items-center border-b border-white/[0.06] pb-3 pt-1 group gap-x-4 w-full"
                             >
-                                <span className="text-[#666] text-[10px] md:text-sm font-medium tracking-widest uppercase transition-colors group-hover:text-[#888] mb-2 sm:mb-0 text-center sm:text-left">{spec.label}</span>
-                                <span className="text-white text-xs sm:text-sm md:text-base font-semibold group-hover:text-[#4f8ef7] transition-colors text-center sm:text-right">{spec.value}</span>
+                                <span className="text-[#888] text-[11px] sm:text-xs font-semibold tracking-wider uppercase transition-colors group-hover:text-[#aaa] text-left shrink-0">{spec.label}</span>
+                                <span className="text-white text-xs sm:text-sm font-semibold group-hover:text-[#4f8ef7] transition-colors text-right leading-tight max-w-[60%]">{spec.value}</span>
                             </motion.div>
                         ))}
                     </div>

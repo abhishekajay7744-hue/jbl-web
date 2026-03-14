@@ -17,20 +17,29 @@ export default function ANCSection() {
                 transition={{ duration: 1.2, ease }}
                 className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
             >
-                {Array.from({ length: 30 }).map((_, i) => (
-                    <motion.div
-                        key={i}
-                        className="absolute rounded-full bg-[#4f8ef7] blur-[2px]"
-                        style={{
-                            width: 3 + Math.random() * 8,
-                            height: 3 + Math.random() * 8,
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                        }}
-                        animate={{ opacity: [0.05, 0.4, 0.05], scale: [1, 2, 1] }}
-                        transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 3 }}
-                    />
-                ))}
+                {Array.from({ length: 30 }).map((_, i) => {
+                    // Make deterministic pseudo-random values derived from i
+                    const size = 3 + (i * 17) % 8;
+                    const left = (i * 23) % 100;
+                    const top = (i * 37) % 100;
+                    const duration = 2 + (i * 11) % 3;
+                    const delay = (i * 13) % 3;
+
+                    return (
+                        <motion.div
+                            key={i}
+                            className="absolute rounded-full bg-[#4f8ef7] blur-[2px]"
+                            style={{
+                                width: size,
+                                height: size,
+                                left: `${left}%`,
+                                top: `${top}%`,
+                            }}
+                            animate={{ opacity: [0.05, 0.4, 0.05], scale: [1, 2, 1] }}
+                            transition={{ duration, repeat: Infinity, delay }}
+                        />
+                    );
+                })}
             </motion.div>
 
             <div className="max-w-5xl mx-auto relative z-10 w-full flex flex-col items-center">

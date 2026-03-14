@@ -2,10 +2,13 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 
-const bars = Array.from({ length: 64 }, (_, i) => ({
-    height: 10 + Math.sin(i * 0.4) * 40 + Math.random() * 30,
-    delay: i * 0.03,
-}));
+const bars = Array.from({ length: 64 }, (_, i) => {
+    const pseudoRandom = (i * 17) % 30;
+    return {
+        height: 10 + Math.sin(i * 0.4) * 40 + pseudoRandom,
+        delay: i * 0.03,
+    };
+});
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -80,7 +83,7 @@ export default function SoundSection() {
                                         className="w-[2px] sm:w-[3px] rounded-full bg-gradient-to-t from-[#2a5bb0] via-[#4f8ef7] to-[#e6f0ff]"
                                         style={{
                                             height: `${bar.height}%`,
-                                            animation: `wave-pulse ${0.8 + Math.random() * 0.6}s ease-in-out infinite alternate`,
+                                            animation: `wave-pulse ${0.8 + ((i * 11) % 6) * 0.1}s ease-in-out infinite alternate`,
                                             animationDelay: `${bar.delay}s`,
                                         }}
                                     />
@@ -117,13 +120,7 @@ export default function SoundSection() {
                     </div>
                 </motion.div>
             </div>
-
-            <style jsx>{`
-                .mask-image-fade {
-                    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-                    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-                }
-            `}</style>
         </section>
     );
 }
+

@@ -154,10 +154,14 @@ body {
   background: var(--color-blue);
   border-radius: 50%;
   position: fixed;
+  top: 0;
+  left: 0;
+  margin-top: -4px;
+  margin-left: -4px;
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: difference;
-  transition: transform 0.1s ease;
+  /* transform logic is now handled by framer-motion */
 }
 
 .cursor-ring {
@@ -166,9 +170,13 @@ body {
   border: 1.5px solid rgba(79, 142, 247, 0.5);
   border-radius: 50%;
   position: fixed;
+  top: 0;
+  left: 0;
+  margin-top: -18px;
+  margin-left: -18px;
   pointer-events: none;
   z-index: 9999;
-  transition: transform 0.15s ease, width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+  /* backdrop-filter is updated by framer-motion */
 }
 
 /* Vignette overlay */
@@ -272,4 +280,10 @@ body {
 .spec-item:hover {
   padding-left: 0.5rem;
   border-color: rgba(79, 142, 247, 0.3);
+}
+
+/* Sound waveform fade mask */
+.mask-image-fade {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
