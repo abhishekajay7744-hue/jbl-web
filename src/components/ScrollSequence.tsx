@@ -71,13 +71,15 @@ export default function ScrollSequence() {
             
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
+
+            // Mathematical equivalent to 'object-fit: cover' centered
             const scale = Math.max(cw / iw, ch / ih);
             const dw = iw * scale;
             const dh = ih * scale;
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
             
-            // Optimization: avoid clearRect since we are drawing over the entire canvas
+            // Draw
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
@@ -138,7 +140,6 @@ export default function ScrollSequence() {
                     // Removed heavy CSS filters that caused severe composite layer jank on scroll
                     willChange: "transform",
                     transform: "translateZ(0)", // Force hardware acceleration
-                    objectFit: "cover",
                 }}
             />
             {/* Vignette */}
