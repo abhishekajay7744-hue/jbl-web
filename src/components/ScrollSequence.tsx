@@ -111,18 +111,41 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // object-fit: contain — ensure entire frame is ALWAYS fully visible without cropping.
-            // Because the site background is now #000000, the letterboxing blends seamlessly.
-            const scale = Math.min(cw / iw, ch / ih);
-            const dw = iw * scale;
-            const dh = ih * scale;
-            const dx = (cw - dw) / 2;
-            const dy = (ch - dh) / 2;
+            // Determine if the screen is tall/portrait (like mobile 310x633)
+            const isPortrait = ch > cw;
 
-            // Clear frame and paint pure black background for letterboxed areas
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, cw, ch);
-            ctx.drawImage(img, dx, dy, dw, dh);
+            if (!isPortrait) {
+                // For desktop/landscape: use pure cover (fills screen, minimal cropping)
+                const scale = Math.max(cw / iw, ch / ih);
+                const dw = iw * scale;
+                const dh = ih * scale;
+                const dx = (cw - dw) / 2;
+                const dy = (ch - dh) / 2;
+                ctx.drawImage(img, dx, dy, dw, dh);
+            } else {
+                // For mobile portrait (310x633): 
+                // 1. Scale image to fit width completely so headphones are fully visible ZERO cropping.
+                const scale = cw / iw;
+                const dw = cw;
+                const dh = ih * scale;
+                const dx = 0;
+                // Center vertically
+                const dy = (ch - dh) / 2;
+
+                // 2. Clear canvas with pure black
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(0, 0, cw, ch);
+
+                // 3. Draw the crisp, uncropped video frame in the center
+                ctx.drawImage(img, dx, dy, dw, dh);
+
+                // 4. THE MAGIC: Take the 1st row of pixels from the top of the video and stretch it upwards
+                // This flawlessly blends the video gradient into the background, killing the "square video box" look!
+                ctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, dy);
+                
+                // 5. Stretch the bottom row of pixels downwards to the bottom of the screen
+                ctx.drawImage(canvas, 0, dy + dh - 1, cw, 1, 0, dy + dh, cw, ch - (dy + dh));
+            }
         }
 
         // --- Scroll-driven frame update ---
