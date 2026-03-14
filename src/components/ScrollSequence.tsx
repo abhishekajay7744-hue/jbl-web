@@ -8,6 +8,14 @@ function pad(n: number) {
     return String(n).padStart(3, "0");
 }
 
+function getViewportSize() {
+    // clientWidth/clientHeight are more reliable than innerWidth/innerHeight
+    // across all modes: mobile, desktop mode on mobile, and actual desktop.
+    const cw = document.documentElement.clientWidth || window.innerWidth;
+    const ch = document.documentElement.clientHeight || window.innerHeight;
+    return { cw, ch };
+}
+
 export default function ScrollSequence() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const imagesRef = useRef<HTMLImageElement[]>([]);
@@ -15,34 +23,31 @@ export default function ScrollSequence() {
     const rafRef = useRef<number>(0);
     const [ready, setReady] = useState(false);
 
-    // Viewport dimensions stored as refs so renderFrame always reads the latest
     const cwRef = useRef(0);
     const chRef = useRef(0);
-    const dprRef = useRef(1);
 
-    // Preload all frames
+    // Preload all frames eagerly
     useEffect(() => {
         const imgs: HTMLImageElement[] = [];
         let loaded = 0;
-        for (let i = 0; i < TOTAL_FRAMES; i++) {
+        const total = TOTAL_FRAMES;
+        for (let i = 0; i < total; i++) {
             const img = new window.Image();
             img.src = `${IMAGE_PREFIX}${pad(i)}.jpg`;
-            img.onload = () => {
+            const onDone = () => {
                 loaded++;
-                if (loaded === TOTAL_FRAMES) setReady(true);
+                if (loaded === total) setReady(true);
             };
-            img.onerror = () => {
-                loaded++;
-                if (loaded === TOTAL_FRAMES) setReady(true);
-            };
+            img.onload = onDone;
+            img.onerror = onDone; // don't hang if one frame 404s
             imgs.push(img);
         }
         imagesRef.current = imgs;
     }, []);
 
-    // Render loop and Event Listeners
     useEffect(() => {
         if (!ready) return;
+
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d", { alpha: false })!;
         ctx.imageSmoothingEnabled = true;
@@ -50,25 +55,24 @@ export default function ScrollSequence() {
 
         function resize() {
             const dpr = window.devicePixelRatio || 1;
-            const cw = window.innerWidth;
-            const ch = window.innerHeight;
+            const { cw, ch } = getViewportSize();
 
-            // Store for use in renderFrame
             cwRef.current = cw;
             chRef.current = ch;
-            dprRef.current = dpr;
 
-            // Set canvas physical pixel dimensions
+            // Physical pixel buffer
             canvas.width = Math.floor(cw * dpr);
             canvas.height = Math.floor(ch * dpr);
 
-            // Set CSS display size
-            canvas.style.width = `${cw}px`;
-            canvas.style.height = `${ch}px`;
+            // CSS display size — match clientWidth exactly so no mismatch
+            canvas.style.width = cw + "px";
+            canvas.style.height = ch + "px";
+            canvas.style.left = "0px";
+            canvas.style.top = "0px";
 
-            // CRITICAL FIX: Reset transform to identity before applying DPR scale.
-            // Without this, every call to resize() compounded the scale (dpr^n after n resizes)
-            // causing the image to be drawn at a tiny fraction of the canvas — the "square box" bug.
+            // IMPORTANT: Reset transform completely, then apply DPR.
+            // ctx.scale() is cumulative — calling it on every resize multiplies
+            // the scale each time (dpr^n after n resizes), shrinking the image to a box.
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
             renderFrame(currentFrameRef.current);
@@ -83,7 +87,7 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // Perfect 'object-fit: cover' math — fills entire viewport, centered, no letterboxing
+            // Use object-fit:cover math — fills entire canvas, centered, no letterbox
             const scale = Math.max(cw / iw, ch / ih);
             const dw = iw * scale;
             const dh = ih * scale;
@@ -97,7 +101,7 @@ export default function ScrollSequence() {
 
         function onScroll() {
             const scrollY = window.scrollY;
-            const docH = document.documentElement.scrollHeight - window.innerHeight;
+            const docH = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             if (docH <= 0) return;
             const progress = Math.min(Math.max(scrollY / docH, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
@@ -128,16 +132,28 @@ export default function ScrollSequence() {
             }
         }
 
-        // Initial setup
+        // Debounce resize so rapid mobile browser chrome changes don't thrash
+        let resizeTimer: ReturnType<typeof setTimeout>;
+        function onResize() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(resize, 50);
+        }
+
+        // Initial render
         resize();
         renderFrame(0);
 
-        window.addEventListener("resize", resize, { passive: true });
+        window.addEventListener("resize", onResize, { passive: true });
+        // Also listen to orientationchange for instant re-draw on rotation
+        window.addEventListener("orientationchange", () => {
+            setTimeout(resize, 200); // wait for browser to settle new dimensions
+        });
         window.addEventListener("scroll", onScroll, { passive: true });
 
         return () => {
-            window.removeEventListener("resize", resize);
+            window.removeEventListener("resize", onResize);
             window.removeEventListener("scroll", onScroll);
+            clearTimeout(resizeTimer);
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
         };
     }, [ready]);
@@ -147,12 +163,14 @@ export default function ScrollSequence() {
             <canvas
                 ref={canvasRef}
                 id="canvas-sequence"
-                className="fixed inset-0 z-0"
                 style={{
-                    width: "100vw",
-                    height: "100vh",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    zIndex: 0,
                     willChange: "transform",
                     transform: "translateZ(0)",
+                    display: "block",
                 }}
             />
             {/* Vignette */}
