@@ -9,9 +9,11 @@ function pad(n: number) {
 }
 
 function getViewportSize() {
+    // window.innerWidth/innerHeight perfectly align with CSS 100vw/100vh bounds,
+    // which prevents layout misalignment in "Desktop Mode" on phones
     return {
-        cw: document.documentElement.clientWidth || window.innerWidth,
-        ch: document.documentElement.clientHeight || window.innerHeight,
+        cw: window.innerWidth,
+        ch: window.innerHeight,
     };
 }
 
@@ -30,25 +32,32 @@ export default function ScrollSequence() {
     // --- Phase 1: Preload frame 0 immediately, rest in background ---
     useEffect(() => {
         const imgs: HTMLImageElement[] = new Array(TOTAL_FRAMES);
-        let loaded = 0;
-
-        for (let i = 0; i < TOTAL_FRAMES; i++) {
-            const img = new window.Image();
-            // Prioritise first frame — all others can trickle in
-            if (i === 0) img.fetchPriority = "high";
-            img.src = `${IMAGE_PREFIX}${pad(i)}.jpg`;
-            imgs[i] = img;
-
-            const onDone = () => {
-                if (i === 0) setFirstFrameReady(true);
-                loaded++;
-                if (loaded === TOTAL_FRAMES) setAllFramesReady(true);
-            };
-            img.onload = onDone;
-            img.onerror = onDone;
-        }
-
         imagesRef.current = imgs;
+
+        // CRITICAL FIX: Only load Frame 0 FIRST so it isn't blocked by 79 other requests
+        const firstImg = new window.Image();
+        firstImg.src = `${IMAGE_PREFIX}${pad(0)}.jpg`;
+        imgs[0] = firstImg;
+
+        const loadRest = () => {
+            setFirstFrameReady(true);
+            let loaded = 1;
+            for (let i = 1; i < TOTAL_FRAMES; i++) {
+                const img = new window.Image();
+                img.src = `${IMAGE_PREFIX}${pad(i)}.jpg`;
+                imgs[i] = img;
+                
+                const onDone = () => {
+                    loaded++;
+                    if (loaded === TOTAL_FRAMES) setAllFramesReady(true);
+                };
+                img.onload = onDone;
+                img.onerror = onDone;
+            }
+        };
+
+        firstImg.onload = loadRest;
+        firstImg.onerror = loadRest;
     }, []);
 
     // --- Phase 2: Setup canvas as soon as frame 0 is ready ---
@@ -61,7 +70,12 @@ export default function ScrollSequence() {
         ctx.imageSmoothingQuality = "high";
 
         function resize() {
-            const dpr = window.devicePixelRatio || 1;
+            // PERFORMANCE BUGFIX: Cap DPR to 1 on mobile to prevent rendering 
+            // massive 4K canvasses in desktop mode which caused extreme lag
+            const isTouch = window.matchMedia("(pointer: coarse)").matches;
+            const targetDpr = window.devicePixelRatio || 1;
+            const dpr = isTouch ? Math.min(targetDpr, 1) : Math.min(targetDpr, 2);
+
             const { cw, ch } = getViewportSize();
 
             cwRef.current = cw;
