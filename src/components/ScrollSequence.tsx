@@ -71,24 +71,13 @@ export default function ScrollSequence() {
             
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
-            let scale = Math.max(cw / iw, ch / ih);
-
-            // On mobile devices, tone down the aggressive 'cover' zooming so the whole product is visible
-            if (cw < 768) {
-                const widthFitScale = cw / iw;
-                // Allow some letterboxing by ensuring we don't scale more than 1.8x the width
-                // Capping it at `ch / ih` ensures it never zooms IN more than the original 'cover' strategy
-                scale = Math.min(widthFitScale * 1.8, ch / ih);
-            }
-
+            const scale = Math.max(cw / iw, ch / ih);
             const dw = iw * scale;
             const dh = ih * scale;
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
             
-            // Clear entire canvas to ensure letterboxed areas match the main theme bg
-            ctx.fillStyle = '#080808';
-            ctx.fillRect(0, 0, cw, ch);
+            // Optimization: avoid clearRect since we are drawing over the entire canvas
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
