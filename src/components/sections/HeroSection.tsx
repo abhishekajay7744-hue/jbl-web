@@ -27,7 +27,7 @@ export default function HeroSection() {
                     initial={{ opacity: 0, y: 50, filter: "blur(20px)", scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
                     transition={{ duration: 1.4, ease, delay: 0.1 }}
-                    className="text-6xl sm:text-7xl md:text-8xl lg:text-[8rem] font-black leading-[0.95] tracking-tighter mb-10 text-center"
+                    className="text-5xl sm:text-7xl md:text-8xl lg:text-[8rem] font-black leading-[0.95] tracking-tighter mb-10 text-center"
                 >
                     <span className="text-white">Hear Every</span>
                     <br />
