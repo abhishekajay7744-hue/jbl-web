@@ -15,7 +15,15 @@ export default function CustomCursor() {
     const springX = useSpring(mouseX, springConfig);
     const springY = useSpring(mouseY, springConfig);
 
+    const [isMobile, setIsMobile] = useState(false);
+
     useEffect(() => {
+        // Detect touch devices
+        if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+            setIsMobile(true);
+            return;
+        }
+
         const onMove = (e: MouseEvent) => {
             mouseX.set(e.clientX);
             mouseY.set(e.clientY);
@@ -45,6 +53,8 @@ export default function CustomCursor() {
             window.removeEventListener("mouseup", onUp);
         };
     }, [mouseX, mouseY]);
+
+    if (isMobile) return null;
 
     return (
         <>

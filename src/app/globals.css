@@ -30,6 +30,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Remove blue tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Custom scrollbar */
@@ -177,6 +179,21 @@ body {
   pointer-events: none;
   z-index: 9999;
   /* backdrop-filter is updated by framer-motion */
+}
+
+/* On touch/mobile devices, restore native cursor & hide custom cursor elements */
+@media (pointer: coarse) {
+  body {
+    cursor: auto;
+  }
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
+  a, button {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
 }
 
 /* Vignette overlay */

@@ -89,6 +89,7 @@ export default function ScrollSequence() {
         function onScroll() {
             const scrollY = window.scrollY;
             const docH = document.documentElement.scrollHeight - window.innerHeight;
+            if (docH <= 0) return;
             const progress = Math.min(Math.max(scrollY / docH, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
             
