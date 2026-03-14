@@ -115,8 +115,9 @@ export default function ScrollSequence() {
             const isPortrait = ch > cw;
 
             if (!isPortrait) {
-                // For desktop/landscape: use pure cover (fills screen, minimal cropping)
-                const scale = Math.max(cw / iw, ch / ih);
+                // For desktop/landscape: base cover + 20% zoom to crop out the watermark logo
+                const baseScale = Math.max(cw / iw, ch / ih);
+                const scale = baseScale * 1.20; 
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const dx = (cw - dw) / 2;
@@ -124,27 +125,30 @@ export default function ScrollSequence() {
                 ctx.drawImage(img, dx, dy, dw, dh);
             } else {
                 // For mobile portrait (310x633): 
-                // 1. Scale image to fit width completely so headphones are fully visible ZERO cropping.
-                const scale = cw / iw;
-                const dw = cw;
+                // Fit to width + 25% zoom to hide watermark and enlarge the headphones nicely
+                const baseScale = cw / iw;
+                const scale = baseScale * 1.25;
+                const dw = iw * scale;
                 const dh = ih * scale;
-                const dx = 0;
-                // Center vertically
+                const dx = (cw - dw) / 2;
                 const dy = (ch - dh) / 2;
 
-                // 2. Clear canvas with pure black
+                // Clear canvas with pure black
                 ctx.fillStyle = "#000000";
                 ctx.fillRect(0, 0, cw, ch);
 
-                // 3. Draw the crisp, uncropped video frame in the center
+                // Draw the perfectly zoomed video frame in the center
                 ctx.drawImage(img, dx, dy, dw, dh);
 
-                // 4. THE MAGIC: Take the 1st row of pixels from the top of the video and stretch it upwards
-                // This flawlessly blends the video gradient into the background, killing the "square video box" look!
-                ctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, dy);
-                
-                // 5. Stretch the bottom row of pixels downwards to the bottom of the screen
-                ctx.drawImage(canvas, 0, dy + dh - 1, cw, 1, 0, dy + dh, cw, ch - (dy + dh));
+                // THE MAGIC: If there's still empty screen space at top/bottom,
+                // grab the 1st/last visible row of pixels and stretch it seamlessly
+                if (dy > 0) {
+                    ctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, dy);
+                }
+                const bottomEdge = dy + dh;
+                if (bottomEdge < ch) {
+                    ctx.drawImage(canvas, 0, bottomEdge - 1, cw, 1, 0, bottomEdge, cw, ch - bottomEdge);
+                }
             }
         }
 
