@@ -115,23 +115,22 @@ export default function ScrollSequence() {
             const isPortrait = ch > cw;
 
             if (!isPortrait) {
-                // For desktop/landscape: base cover + 30% zoom for perfect cinematic balance
+                // HIGH IMPACT: 1.7x zoom for cinematic immersion
                 const baseScale = Math.max(cw / iw, ch / ih);
-                const scale = baseScale * 1.30; 
+                const scale = baseScale * 1.70; 
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const dx = (cw - dw) / 2;
                 const dy = (ch - dh) / 2;
                 ctx.drawImage(img, dx, dy, dw, dh);
             } else {
-                // For mobile portrait (310x633): 
-                // Fit to width + 45% zoom (balanced from previous 60%) to show more headphone detail
+                // DEEP CROP: 1.8x zoom for high-impact mobile experience
                 const baseScale = cw / iw;
-                const scale = baseScale * 1.45;
+                const scale = baseScale * 1.80;
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const dx = (cw - dw) / 2;
-                // Vertical shift: slight upward offset (-15%) to center the actual headphone design
+                // Vertical shift: slight upward offset to center focus
                 const dy = ((ch - dh) / 2) - (ch * 0.05);
 
                 // Clear canvas with pure black
@@ -184,8 +183,9 @@ export default function ScrollSequence() {
             updateFromScroll();
 
             const diff = targetFrame - currentFrameRef.current;
-            // Snappier lerp (0.35) for "perfectly synced" feel with finger movement
-            currentFrameRef.current += diff * 0.35;
+            // DRAMATICALLY FASTER: Learp increased to 0.7 for instant, 'perfectly synced' response.
+            // This kills the "slow delay" feeling.
+            currentFrameRef.current += diff * 0.7;
 
             if (Math.abs(diff) < 0.01) {
                 currentFrameRef.current = targetFrame;
