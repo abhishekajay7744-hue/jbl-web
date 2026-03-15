@@ -136,9 +136,10 @@ export default function ScrollSequence() {
             const docH =
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
-            // SPEED MAPPING: 2.0x multiplier provides energetic movement while still lasting 
-            // through the core product sections of the site.
-            const progress = Math.min(Math.max((scrollY / docH) * 2.0, 0), 1);
+            if (docH <= 0) return;
+            // 1:1 MAPPING: Removed the speed multiplier so the animation plays smoothly 
+            // throughout the entire length of the website and ends exactly at the footer.
+            const progress = Math.min(Math.max(scrollY / docH, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
         }
 
