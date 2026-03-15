@@ -111,57 +111,20 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // Determine if the screen is tall/portrait (like mobile 310x633)
-            const isPortrait = ch > cw;
+            // UNIFIED BACKGROUND ENGINE: Use 'cover' math for all devices.
+            // This fills the mobile screen (310x633) completely with no separate boxes.
+            const baseScale = Math.max(cw / iw, ch / ih);
+            
+            // 15% zoom to comfortably crop out the 'Vevo' label while keeping headphones large.
+            const scale = baseScale * 1.15; 
+            
+            const dw = iw * scale;
+            const dh = ih * scale;
+            const dx = (cw - dw) / 2;
+            const dy = (ch - dh) / 2;
 
-            if (!isPortrait) {
-                // HIGH IMPACT: 1.7x zoom for cinematic immersion
-                const baseScale = Math.max(cw / iw, ch / ih);
-                const scale = baseScale * 1.70; 
-                const dw = iw * scale;
-                const dh = ih * scale;
-                const dx = (cw - dw) / 2;
-                const dy = (ch - dh) / 2;
-                ctx.drawImage(img, dx, dy, dw, dh);
-            } else {
-                // DEEP CROP: 1.8x zoom for high-impact mobile experience
-                const baseScale = cw / iw;
-                const scale = baseScale * 1.80;
-                const dw = iw * scale;
-                const dh = ih * scale;
-                const dx = (cw - dw) / 2;
-                // Vertical shift: slight upward offset to center focus
-                const dy = ((ch - dh) / 2) - (ch * 0.05);
-
-                // Clear canvas with pure black
-                ctx.fillStyle = "#000000";
-                ctx.fillRect(0, 0, cw, ch);
-
-                // Draw the perfectly zoomed video frame in the center
-                // Draw the perfectly zoomed video frame in the center
-                ctx.drawImage(img, dx, dy, dw, dh);
-
-                // THE MAGIC: If there's still empty screen space at top/bottom,
-                // grab the 1st/last visible row of pixels and stretch it seamlessly
-                // Safely creating an offscreen canvas to prevent Safari iOS crashes
-                if (dy > 0) {
-                    const topRow = document.createElement("canvas");
-                    topRow.width = cw;
-                    topRow.height = 1;
-                    const tctx = topRow.getContext("2d")!;
-                    tctx.drawImage(canvas, 0, dy, cw, 1, 0, 0, cw, 1);
-                    ctx.drawImage(topRow, 0, 0, cw, 1, 0, 0, cw, dy);
-                }
-                const bottomEdge = dy + dh;
-                if (bottomEdge < ch) {
-                    const bottomRow = document.createElement("canvas");
-                    bottomRow.width = cw;
-                    bottomRow.height = 1;
-                    const bctx = bottomRow.getContext("2d")!;
-                    bctx.drawImage(canvas, 0, bottomEdge - 1, cw, 1, 0, 0, cw, 1);
-                    ctx.drawImage(bottomRow, 0, 0, cw, 1, 0, bottomEdge, cw, ch - bottomEdge);
-                }
-            }
+            // No clearRect needed because we are covering 100% of the viewport now.
+            ctx.drawImage(img, dx, dy, dw, dh);
         }
 
         // --- Scroll-driven frame update ---
@@ -183,9 +146,7 @@ export default function ScrollSequence() {
             updateFromScroll();
 
             const diff = targetFrame - currentFrameRef.current;
-            // DRAMATICALLY FASTER: Learp increased to 0.7 for instant, 'perfectly synced' response.
-            // This kills the "slow delay" feeling.
-            currentFrameRef.current += diff * 0.7;
+            currentFrameRef.current += diff * 0.9;
 
             if (Math.abs(diff) < 0.01) {
                 currentFrameRef.current = targetFrame;
