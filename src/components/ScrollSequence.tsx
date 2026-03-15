@@ -124,9 +124,7 @@ export default function ScrollSequence() {
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
 
-            // Paint background then draw frame
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, cw, ch);
+            // Optimized: removed redundant fillRect as cover scale guarantees 100% canvas coverage
             ctx.drawImage(img, dx, dy, dw, dh);
         }
 
@@ -138,10 +136,9 @@ export default function ScrollSequence() {
             const docH =
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
-            if (docH <= 0) return;
-            // SPEED MULTIPLIER: 5.0x boost (increased from 2.5x) 
-            // This makes the animated visual much more responsive and faster with the scrolling.
-            const progress = Math.min(Math.max((scrollY / docH) * 5.0, 0), 1);
+            // SPEED MAPPING: 2.0x multiplier provides energetic movement while still lasting 
+            // through the core product sections of the site.
+            const progress = Math.min(Math.max((scrollY / docH) * 2.0, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
         }
 
@@ -151,11 +148,11 @@ export default function ScrollSequence() {
             updateFromScroll();
 
             const diff = targetFrame - currentFrameRef.current;
-            // 90HZ INSTANT SYNC: Setting lerp to 1.0 for zero-latency tracking.
-            // The animation is now perfectly "glued" to the user's scroll.
-            currentFrameRef.current = targetFrame;
+            // 90Hz LIQUID MOTION: 0.6 lerp provides the perfect balance of "instant reaction" 
+            // and "creamy smoothness". This eliminates all scroll jitter/lag.
+            currentFrameRef.current += diff * 0.6;
 
-            if (Math.abs(diff) < 0.01) {
+            if (Math.abs(diff) < 0.001) {
                 currentFrameRef.current = targetFrame;
             }
 
