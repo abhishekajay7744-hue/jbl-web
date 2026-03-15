@@ -115,8 +115,9 @@ export default function ScrollSequence() {
             // This ensures the animation ALWAYS fits the screen perfectly with no gaps.
             const baseScale = Math.max(cw / iw, ch / ih);
             
-            // 20% zoom to perfectly crop out labels and center the headphones immersively
-            const scale = baseScale * 1.20; 
+            // MOBILE FRIENDLY CROP: 1.1x zoom (reduced from 1.2x) 
+            // This avoids "crop out" on mobile 310x633 while keeping labels hidden.
+            const scale = baseScale * 1.10; 
             
             const dw = iw * scale;
             const dh = ih * scale;
@@ -138,9 +139,9 @@ export default function ScrollSequence() {
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
             if (docH <= 0) return;
-            // SPEED MULTIPLIER: 2.5x boost makes the animation energetic and responsive.
-            // This ensures it isn't "slow to the scroll".
-            const progress = Math.min(Math.max((scrollY / docH) * 2.5, 0), 1);
+            // SPEED MULTIPLIER: 5.0x boost (increased from 2.5x) 
+            // This makes the animated visual much more responsive and faster with the scrolling.
+            const progress = Math.min(Math.max((scrollY / docH) * 5.0, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
         }
 
