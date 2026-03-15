@@ -111,43 +111,22 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            const isPortrait = ch > cw;
-
-            // MOBILE FRIENDLY ENGINE (ZERO CROPPING):
-            // Portrait: Force exact FIT-TO-WIDTH (1.0 zoom) to ensure NO side cropping.
-            // Landscape: Sustain 1.15x zoom to hide watermarks while covering screen.
-            const scale = isPortrait ? (cw / iw) : Math.max(cw / iw, ch / ih) * 1.15; 
+            // UNIFIED CINEMATIC ENGINE: Use 'cover' math for every device.
+            // This ensures the animation ALWAYS fits the screen perfectly with no gaps.
+            const baseScale = Math.max(cw / iw, ch / ih);
+            
+            // 20% zoom to perfectly crop out labels and center the headphones immersively
+            const scale = baseScale * 1.20; 
             
             const dw = iw * scale;
             const dh = ih * scale;
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
 
-            // Ensure background is pure black to match site
+            // Paint background then draw frame
             ctx.fillStyle = "#000000";
             ctx.fillRect(0, 0, cw, ch);
-
             ctx.drawImage(img, dx, dy, dw, dh);
-
-            // CINEMATIC BLENDING: 
-            // If the video doesn't cover the full height (common on tall phones),
-            // apply a soft black gradient to the top/bottom edges of the video 
-            // so it never looks like a "box" or "separate background".
-            if (dy > 0 || isPortrait) {
-                // Top gradient
-                const topGrad = ctx.createLinearGradient(0, dy, 0, dy + 60);
-                topGrad.addColorStop(0, "rgba(0,0,0,1)");
-                topGrad.addColorStop(1, "rgba(0,0,0,0)");
-                ctx.fillStyle = topGrad;
-                ctx.fillRect(0, dy, cw, 60);
-
-                // Bottom gradient
-                const botGrad = ctx.createLinearGradient(0, dy + dh - 60, 0, dy + dh);
-                botGrad.addColorStop(0, "rgba(0,0,0,0)");
-                botGrad.addColorStop(1, "rgba(0,0,0,1)");
-                ctx.fillStyle = botGrad;
-                ctx.fillRect(0, dy + dh - 60, cw, 60);
-            }
         }
 
         // --- Scroll-driven frame update ---
@@ -159,7 +138,9 @@ export default function ScrollSequence() {
                 document.documentElement.scrollHeight -
                 document.documentElement.clientHeight;
             if (docH <= 0) return;
-            const progress = Math.min(Math.max(scrollY / docH, 0), 1);
+            // SPEED MULTIPLIER: 2.5x boost makes the animation energetic and responsive.
+            // This ensures it isn't "slow to the scroll".
+            const progress = Math.min(Math.max((scrollY / docH) * 2.5, 0), 1);
             targetFrame = progress * (TOTAL_FRAMES - 1);
         }
 
@@ -169,9 +150,9 @@ export default function ScrollSequence() {
             updateFromScroll();
 
             const diff = targetFrame - currentFrameRef.current;
-            // ULTRA-FAST SYNC: 0.95 lerp for near-instant 120Hz smooth response.
-            // This makes the transition feel perfectly fluid with zero 'slow' delay.
-            currentFrameRef.current += diff * 0.95;
+            // 90HZ INSTANT SYNC: Setting lerp to 1.0 for zero-latency tracking.
+            // The animation is now perfectly "glued" to the user's scroll.
+            currentFrameRef.current = targetFrame;
 
             if (Math.abs(diff) < 0.01) {
                 currentFrameRef.current = targetFrame;
