@@ -111,20 +111,45 @@ export default function ScrollSequence() {
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
 
-            // UNIFIED BACKGROUND ENGINE: Use 'cover' math for all devices.
-            // This fills the mobile screen (310x633) completely with no separate boxes.
-            const baseScale = Math.max(cw / iw, ch / ih);
-            
-            // 15% zoom to comfortably crop out the 'Vevo' label while keeping headphones large.
-            const scale = baseScale * 1.15; 
+            const isPortrait = ch > cw;
+
+            // MOBILE FRIENDLY ENGINE:
+            // Portrait: Fit to width + 25% zoom (prevents side cropping, keeps large)
+            // Landscape: Fit to cover (fills screen)
+            const baseScale = isPortrait ? (cw / iw) : Math.max(cw / iw, ch / ih);
+            const zoomMultiplier = isPortrait ? 1.25 : 1.15;
+            const scale = baseScale * zoomMultiplier; 
             
             const dw = iw * scale;
             const dh = ih * scale;
             const dx = (cw - dw) / 2;
             const dy = (ch - dh) / 2;
 
-            // No clearRect needed because we are covering 100% of the viewport now.
+            // Ensure background is pure black to match site
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, cw, ch);
+
             ctx.drawImage(img, dx, dy, dw, dh);
+
+            // CINEMATIC BLENDING: 
+            // If the video doesn't cover the full height (common on tall phones),
+            // apply a soft black gradient to the top/bottom edges of the video 
+            // so it never looks like a "box" or "separate background".
+            if (dy > 0 || isPortrait) {
+                // Top gradient
+                const topGrad = ctx.createLinearGradient(0, dy, 0, dy + 60);
+                topGrad.addColorStop(0, "rgba(0,0,0,1)");
+                topGrad.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = topGrad;
+                ctx.fillRect(0, dy, cw, 60);
+
+                // Bottom gradient
+                const botGrad = ctx.createLinearGradient(0, dy + dh - 60, 0, dy + dh);
+                botGrad.addColorStop(0, "rgba(0,0,0,0)");
+                botGrad.addColorStop(1, "rgba(0,0,0,1)");
+                ctx.fillStyle = botGrad;
+                ctx.fillRect(0, dy + dh - 60, cw, 60);
+            }
         }
 
         // --- Scroll-driven frame update ---
