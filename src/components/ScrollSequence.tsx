@@ -115,9 +115,9 @@ export default function ScrollSequence() {
             const isPortrait = ch > cw;
 
             if (!isPortrait) {
-                // For desktop/landscape: base cover + 45% zoom for high-impact cinematic feel
+                // For desktop/landscape: base cover + 30% zoom for perfect cinematic balance
                 const baseScale = Math.max(cw / iw, ch / ih);
-                const scale = baseScale * 1.45; 
+                const scale = baseScale * 1.30; 
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const dx = (cw - dw) / 2;
@@ -125,9 +125,9 @@ export default function ScrollSequence() {
                 ctx.drawImage(img, dx, dy, dw, dh);
             } else {
                 // For mobile portrait (310x633): 
-                // Fit to width + 60% zoom to make headphones large and eliminate all labels
+                // Fit to width + 45% zoom (balanced from previous 60%) to show more headphone detail
                 const baseScale = cw / iw;
-                const scale = baseScale * 1.60;
+                const scale = baseScale * 1.45;
                 const dw = iw * scale;
                 const dh = ih * scale;
                 const dx = (cw - dw) / 2;
