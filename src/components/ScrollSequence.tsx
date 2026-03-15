@@ -113,12 +113,10 @@ export default function ScrollSequence() {
 
             const isPortrait = ch > cw;
 
-            // MOBILE FRIENDLY ENGINE:
-            // Portrait: Fit to width + 25% zoom (prevents side cropping, keeps large)
-            // Landscape: Fit to cover (fills screen)
-            const baseScale = isPortrait ? (cw / iw) : Math.max(cw / iw, ch / ih);
-            const zoomMultiplier = isPortrait ? 1.25 : 1.15;
-            const scale = baseScale * zoomMultiplier; 
+            // MOBILE FRIENDLY ENGINE (ZERO CROPPING):
+            // Portrait: Force exact FIT-TO-WIDTH (1.0 zoom) to ensure NO side cropping.
+            // Landscape: Sustain 1.15x zoom to hide watermarks while covering screen.
+            const scale = isPortrait ? (cw / iw) : Math.max(cw / iw, ch / ih) * 1.15; 
             
             const dw = iw * scale;
             const dh = ih * scale;
@@ -171,7 +169,9 @@ export default function ScrollSequence() {
             updateFromScroll();
 
             const diff = targetFrame - currentFrameRef.current;
-            currentFrameRef.current += diff * 0.9;
+            // ULTRA-FAST SYNC: 0.95 lerp for near-instant 120Hz smooth response.
+            // This makes the transition feel perfectly fluid with zero 'slow' delay.
+            currentFrameRef.current += diff * 0.95;
 
             if (Math.abs(diff) < 0.01) {
                 currentFrameRef.current = targetFrame;
